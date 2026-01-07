@@ -1,16 +1,20 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
 )
 
 func main() {
-	// math/rand in Go requires a Source for determinism.
-	// We'll use the same seed as the C++ test (0).
-	r := rand.New(rand.NewSource(0))
+	// crypto/rand uses the system random number generator (WASI random_get).
+	b := make([]byte, 5)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println("Random numbers:")
-	for i := 0; i < 5; i++ {
-		fmt.Println(r.Intn(100))
+	for _, v := range b {
+		fmt.Println(int(v) % 100)
 	}
 }
