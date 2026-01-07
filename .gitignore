@@ -1,3 +1,6 @@
 bazel-*
+blaze-*
+build_*.log
+build_*.txt
 target/
 .DS_Store
