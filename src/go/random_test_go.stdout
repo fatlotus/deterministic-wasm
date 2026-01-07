@@ -1,8 +1,9 @@
 [Host] random_get called for 32 bytes
+[Host] random_get called for 5 bytes
 Random numbers:
-74
-14
-53
-6
-15
+42
+43
+44
+45
+46
 [Host] proc_exit called with code 0
