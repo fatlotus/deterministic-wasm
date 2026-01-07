@@ -1,0 +1,69 @@
+config_setting(
+    name = "macos_arm64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+)
+
+config_setting(
+    name = "macos_x86_64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+WASI_FILES = select({
+    "@platforms//os:linux": ["@wasi_sdk_linux//:all_files"],
+    ":macos_arm64": ["@wasi_sdk_macos_arm64//:all_files"],
+    ":macos_x86_64": ["@wasi_sdk_macos_x86_64//:all_files"],
+    "//conditions:default": ["@wasi_sdk_linux//:all_files"],
+})
+
+load("//:wasm_test.bzl", "wasm_test")
+
+CPP_FILES = glob(["*.cpp"])
+STDOUT_FILES = glob(["*.stdout"])
+
+exports_files(STDOUT_FILES)
+
+[
+    wasm_test(
+        name = f[:-4] + "_cpp_test",
+        stdout = f[:-4] + "_cpp.stdout",
+        wasm = ":" + f[:-4] + "_wasm",
+    )
+    for f in CPP_FILES
+    if (f[:-4] + "_cpp.stdout") in STDOUT_FILES
+]
+
+[
+    genrule(
+        name = f[:-4] + "_wasm",
+        srcs = [f] + WASI_FILES,
+        outs = [f[:-4] + ".wasm"],
+        cmd = """
+CLANG_PATH=$$(echo $(SRCS) | tr ' ' '\\n' | grep 'bin/clang++' | head -n 1)
+SYSROOT_FILE=$$(echo $(SRCS) | tr ' ' '\\n' | grep 'share/wasi-sysroot/include/wasm32-wasip1/stdalign.h' | head -n 1)
+WASI_SYSROOT=$$(dirname $$(dirname $$(dirname $$SYSROOT_FILE)))
+BIN_DIR=$$(dirname $$CLANG_PATH)
+
+# Explicitly add C++ include paths because WASI SDK 29 structure seems to confuse clang in the sandbox
+CXX_INCLUDE="$$WASI_SYSROOT/include/wasm32-wasip1-threads/c++/v1"
+
+$$CLANG_PATH -O2 -Wl,--import-memory,--export-memory -Wl,--max-memory=$$((1<<32)) \
+    --std=c++20 -fno-exceptions -g --target=wasm32-wasip1-threads \
+    --sysroot="$$WASI_SYSROOT" \
+    -isystem "$$CXX_INCLUDE" \
+    -B"$$BIN_DIR" \
+    $(location :%s) -o $@.tmp.wasm
+
+$(location //:transform_wasm) $@.tmp.wasm --output $@
+rm $@.tmp.wasm
+        """ % f,
+        tools = ["//:transform_wasm"],
+        visibility = ["//visibility:public"],
+    )
+    for f in CPP_FILES
+]

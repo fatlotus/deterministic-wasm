@@ -1,0 +1,87 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("@crates//:defs.bzl", "all_crate_deps")
+
+exports_files(["tests/test_wasm.rs"])
+
+rust_library(
+    name = "deterministic_wasm_lib",
+    srcs = [
+        "src/lib.rs",
+        "src/memory.rs",
+        "src/scheduler.rs",
+        "src/threading_builtins.rs",
+        "src/vfs.rs",
+        "src/wasi_builtins.rs",
+        "src/wasi_fs_builtins.rs",
+        "src/wasm_transform.rs",
+    ],
+    deps = all_crate_deps(
+        normal = True,
+        proc_macro = True,
+    ),
+    crate_name = "deterministic_wasm",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "test_data",
+    srcs = glob(["test_data/**/*"]),
+    visibility = ["//visibility:public"],
+)
+
+rust_binary(
+    name = "deterministic-wasm",
+    srcs = ["src/main.rs"],
+    deps = [
+        ":deterministic_wasm_lib",
+    ] + all_crate_deps(
+        normal = True,
+        proc_macro = True,
+    ),
+)
+
+rust_binary(
+    name = "transform_wasm",
+    srcs = ["src/bin/transform_wasm.rs"],
+    deps = [
+        ":deterministic_wasm_lib",
+    ] + all_crate_deps(
+        normal = True,
+        proc_macro = True,
+    ),
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "wasm_tests",
+    srcs = ["tests/test_wasm.rs"],
+    deps = [
+        ":deterministic_wasm_lib",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+        proc_macro = True,
+        proc_macro_dev = True,
+    ),
+    data = glob(["test_data/**/*"]) + [
+        "//src/wat:proc_exit_test.wat",
+        "//src/wat:proc_exit_test.stdout",
+        "//src/wat:proc_exit_threads_test.wat",
+        "//src/wat:proc_exit_threads_test.stdout",
+        "//src/go:model_checker_go",
+        "//src/go:model_checker_go.stdout",
+        "//src/go:vfs_test_go",
+        "//src/go:env_test_go",
+        "//src/go:random_test_go",
+        "//src/go:threads_test_go",
+        "//src/cpp:model_checker_test_wasm",
+        "//src/cpp:vfs_test_wasm",
+        "//src/cpp:env_wasm",
+        "//src/cpp:random_wasm",
+        "//src/cpp:threads_wasm",
+        "//src/cpp:vfs_test_cpp.stdout",
+        "//src/cpp:env_cpp.stdout",
+        "//src/cpp:random_cpp.stdout",
+        "//src/cpp:threads_cpp.stdout",
+    ],
+)

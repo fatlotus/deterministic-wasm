@@ -1,0 +1,19 @@
+load("//:wasm_test.bzl", "wasm_test")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(glob(["*.wat", "*.stdout"]))
+
+WAT_TESTS = [
+    "proc_exit_test",
+    "proc_exit_threads_test",
+]
+
+[
+    wasm_test(
+        name = name + "_test",
+        wasm = name + ".wat",
+        stdout = name + ".stdout",
+    )
+    for name in WAT_TESTS
+]

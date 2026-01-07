@@ -1,0 +1,35 @@
+module(
+    name = "deterministic-wasm",
+    version = "0.1.0",
+)
+
+bazel_dep(name = "rules_rust", version = "0.68.1")
+bazel_dep(name = "rules_go", version = "0.59.0")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "gazelle", version = "0.40.0")
+bazel_dep(name = "platforms", version = "0.0.11")
+
+# Rust configuration
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = "2024",
+    versions = ["1.92.0"],
+)
+use_repo(rust, "rust_toolchains")
+register_toolchains("@rust_toolchains//:all")
+
+crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = ["//:Cargo.toml"],
+)
+use_repo(crate, "crates")
+
+# Go configuration
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.25.0")
+
+# WASI SDK configuration
+wasi_sdk = use_extension("//:wasi_sdk_extension.bzl", "wasi_sdk")
+use_repo(wasi_sdk, "wasi_sdk_linux", "wasi_sdk_macos_arm64", "wasi_sdk_macos_x86_64")

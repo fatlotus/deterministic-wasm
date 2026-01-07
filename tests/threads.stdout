@@ -1,0 +1,8 @@
+[Main] Starting demo, time=1704067200
+[Host] Spawning thread 1, info=138348
+[Host] Spawning thread 2, info=204604
+[Thread 1] Starting, time=1704067200, sleeping for 2s
+[Thread 2] Starting, time=1704067200, sleeping for 1s
+[Thread 2] Woke up, time=1704067201 (elapsed: 1s)
+[Thread 1] Woke up, time=1704067202 (elapsed: 2s)
+[Main] Demo finished, time=1704067203 (total elapsed: 3s)

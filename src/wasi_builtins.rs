@@ -1,0 +1,321 @@
+use crate::scheduler::{DeterministicThread, call_scheduler};
+use crate::memory::{read_mem, write_mem};
+use wasmtime::{Linker, Store};
+use tokio::sync::oneshot;
+use anyhow::Result;
+use std::cmp::Reverse;
+use crate::scheduler::DelayedThread;
+
+pub fn register_wasi_builtins(linker: &mut Linker<DeterministicThread>) -> Result<()> {
+    // clock_time_get: Returns a fixed timestamp
+    linker.func_wrap("wasi_snapshot_preview1", "clock_time_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, _id: i32, _precision: i64, result_ptr: i32| -> i32 {
+        let time = caller.data().scheduler.lock().unwrap().current_time;
+        let export = caller.get_export("memory");
+
+        if let Some(export) = export {
+            if write_mem(&mut caller, &export, result_ptr as usize, &time.to_le_bytes()).is_ok() {
+                // let mut stdout = caller.data().stdout.lock().unwrap();
+                // let _ = writeln!(stdout, "[Host] clock_time_get called, returning deterministic timestamp: {}", time);
+                return 0;
+            }
+        }
+        29 // EIO
+    })?;
+
+    // clock_res_get: Returns the resolution of a clock (stub)
+    linker.func_wrap("wasi_snapshot_preview1", "clock_res_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, _id: i32, result_ptr: i32| -> i32 {
+        let export = caller.get_export("memory");
+        if let Some(export) = export {
+            let res: u64 = 1_000_000; // 1ms resolution
+            if write_mem(&mut caller, &export, result_ptr as usize, &res.to_le_bytes()).is_ok() {
+                return 0;
+            }
+        }
+        29 // EIO
+    })?;
+
+    linker.func_wrap("wasi_snapshot_preview1", "random_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, buf_ptr: i32, buf_len: i32| -> i32 {
+        {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[Host] random_get called for {} bytes", buf_len);
+        }
+        let export = caller.get_export("memory");
+        if let Some(export) = export {
+            let mut rand_data = vec![0u8; buf_len as usize];
+            for (i, b) in rand_data.iter_mut().enumerate() {
+                *b = ((i + 42) % 256) as u8;
+            }
+            if write_mem(&mut caller, &export, buf_ptr as usize, &rand_data).is_ok() {
+                return 0; // SUCCESS
+            }
+        }
+        29 // EIO
+    })?;
+
+    // args_sizes_get: Get argument sizes
+    linker.func_wrap("wasi_snapshot_preview1", "args_sizes_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, count_ptr: i32, buf_size_ptr: i32| -> i32 {
+        let args = caller.data().args.clone();
+        let export = caller.get_export("memory");
+        if let Some(export) = export {
+            let count = args.len() as u32;
+            let mut buf_size = 0u32;
+            for arg in &args {
+                buf_size += (arg.len() + 1) as u32; // +1 for null terminator
+            }
+            if write_mem(&mut caller, &export, count_ptr as usize, &count.to_le_bytes()).is_ok() &&
+               write_mem(&mut caller, &export, buf_size_ptr as usize, &buf_size.to_le_bytes()).is_ok() {
+                return 0; // SUCCESS
+            }
+        }
+        29 // EIO
+    })?;
+
+    // args_get: Get arguments
+    linker.func_wrap("wasi_snapshot_preview1", "args_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, argv_ptr: i32, argv_buf_ptr: i32| -> i32 {
+        let args = caller.data().args.clone();
+        let export = caller.get_export("memory").ok_or_else(|| anyhow::anyhow!("memory export not found")).unwrap();
+        
+        let mut current_buf_offset = 0;
+        for (i, arg) in args.iter().enumerate() {
+            let arg_ptr = argv_buf_ptr + current_buf_offset as i32;
+            let arg_bytes = arg.as_bytes();
+            
+            // Write pointer to argv array
+            write_mem(&mut caller, &export, (argv_ptr + (i * 4) as i32) as usize, &arg_ptr.to_le_bytes()).unwrap();
+            
+            // Write string + null terminator to buffer
+            write_mem(&mut caller, &export, (argv_buf_ptr + current_buf_offset as i32) as usize, arg_bytes).unwrap();
+            write_mem(&mut caller, &export, (argv_buf_ptr + current_buf_offset as i32 + arg_bytes.len() as i32) as usize, &[0u8]).unwrap();
+            
+            current_buf_offset += arg_bytes.len() + 1;
+        }
+        0 // SUCCESS
+    })?;
+
+    linker.func_wrap_async("wasi_snapshot_preview1", "poll_oneoff", |mut caller: wasmtime::Caller<'_, DeterministicThread>, (in_ptr, out_ptr, nsubscriptions, nevents_ptr): (i32, i32, i32, i32)| {
+        {
+            // eprintln!("[Host] poll_oneoff called");
+        }
+        Box::new(async move {
+            let export = caller.get_export("memory").ok_or_else(|| anyhow::anyhow!("memory export not found"))?;
+            
+            let mut min_wake_time = u64::MAX;
+            let mut userdatas = Vec::new();
+
+            for i in 0..nsubscriptions as usize {
+                let sub_ptr = in_ptr as usize + i * 48;
+                let mut sub_data = [0u8; 48];
+                read_mem(&caller, &export, sub_ptr, &mut sub_data)?;
+                
+                let userdata = u64::from_le_bytes(sub_data[0..8].try_into().unwrap());
+                userdatas.push(userdata);
+                let tag = sub_data[8]; // 0 = clock, 1 = fd_read, 2 = fd_write
+                
+                if tag == 0 {
+                    let _clock_id = u32::from_le_bytes(sub_data[16..20].try_into().unwrap());
+                    let timeout = u64::from_le_bytes(sub_data[24..32].try_into().unwrap());
+                    let flags = u16::from_le_bytes(sub_data[40..42].try_into().unwrap());
+                    
+                    let wake_time = if flags & 1 == 1 {
+                        timeout
+                    } else {
+                        caller.data().scheduler.lock().unwrap().current_time.saturating_add(timeout)
+                    };
+                    
+                    if wake_time < min_wake_time {
+                        min_wake_time = wake_time;
+                    }
+                } else {
+                    return Ok(58); // ENOTSUP for fd_read/fd_write
+                }
+            }
+
+            if min_wake_time != u64::MAX {
+                let (tx, rx) = oneshot::channel();
+                {
+                    let mut sched = caller.data_mut().scheduler.lock().unwrap();
+                    sched.delayed_threads.push(Reverse(DelayedThread { wake_time: min_wake_time, tx }));
+                }
+                call_scheduler(caller.data_mut()).await;
+                rx.await.map_err(|e| anyhow::anyhow!("oneshot receive failed: {}", e))?;
+            }
+
+            // Write success events
+            for (i, userdata) in userdatas.into_iter().enumerate() {
+                let mut event = [0u8; 32];
+                event[0..8].copy_from_slice(&userdata.to_le_bytes());
+                event[8..10].copy_from_slice(&0u16.to_le_bytes()); // errno 0
+                event[10] = 0; // type clock
+                write_mem(&mut caller, &export, out_ptr as usize + i * 32, &event)?;
+            }
+            
+            write_mem(&mut caller, &export, nevents_ptr as usize, &(nsubscriptions as u32).to_le_bytes())?;
+            
+            Ok(0) // SUCCESS
+        })
+    })?;
+
+    linker.func_wrap_async("wasi_snapshot_preview1", "sched_yield", |mut caller: wasmtime::Caller<'_, DeterministicThread>, _: ()| {
+        {
+            // eprintln!("[Host] sched_yield called");
+        }
+        Box::new(async move {
+            let (tx, rx) = oneshot::channel();
+            {
+                let mut sched = caller.data_mut().scheduler.lock().unwrap();
+                sched.paused_threads.push_back(tx);
+            }
+            call_scheduler(caller.data_mut()).await;
+            rx.await.map_err(|e| anyhow::anyhow!("oneshot receive failed: {}", e))?;
+
+            Ok(0) // SUCCESS
+        })
+    })?;
+
+    // proc_exit: Terminate process
+    linker.func_wrap("wasi_snapshot_preview1", "proc_exit", |caller: wasmtime::Caller<'_, DeterministicThread>, code: i32| -> Result<(), wasmtime::Error> {
+        {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[Host] proc_exit called with code {}", code);
+        }
+        
+        {
+            let mut sched = caller.data().scheduler.lock().unwrap();
+            sched.exited = Some(code);
+            // Clear all queues to stop further scheduling
+            sched.paused_threads.clear();
+            sched.delayed_threads.clear();
+            sched.futex_blocked_threads.clear();
+        }
+
+        // Return an error to trigger a trap in Wasmtime
+        Err(anyhow::anyhow!("proc_exit"))
+    })?;
+
+    // environ_sizes_get: Get environment variable sizes (stub)
+    linker.func_wrap("wasi_snapshot_preview1", "environ_sizes_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, count_ptr: i32, buf_size_ptr: i32| -> i32 {
+        let export = caller.get_export("memory");
+        if let Some(export) = export {
+            if write_mem(&mut caller, &export, count_ptr as usize, &0u32.to_le_bytes()).is_ok() &&
+               write_mem(&mut caller, &export, buf_size_ptr as usize, &0u32.to_le_bytes()).is_ok() {
+                return 0; // SUCCESS
+            }
+        }
+        29 // EIO
+    })?;
+
+    // environ_get: Get environment variables (stub)
+    linker.func_wrap("wasi_snapshot_preview1", "environ_get", |_caller: wasmtime::Caller<'_, DeterministicThread>, _environ_ptr: i32, _environ_buf_ptr: i32| -> i32 {
+        0 // SUCCESS
+    })?;
+
+    linker.func_wrap("wasi", "thread-spawn", |mut caller: wasmtime::Caller<'_, DeterministicThread>, thread_info_ptr: i32| -> i32 {
+        let (thread_id, rx) = {
+            let mut sched = caller.data_mut().scheduler.lock().unwrap();
+            let thread_id = sched.next_thread_id;
+            sched.next_thread_id += 1;
+            
+            let (tx, rx) = oneshot::channel();
+            sched.paused_threads.push_back(tx);
+            (thread_id, rx)
+        };
+        
+        let data = caller.data();
+        let scheduler = data.scheduler.clone();
+        let instance = data.instance.clone().expect("instance not found in state");
+        let linker = data.linker.clone();
+        let stdout_shared = data.stdout.clone();
+        let wasi_fs = data.wasi_fs.clone();
+
+        {
+            let mut stdout = data.stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[Host] Spawning thread {}, info={}", thread_id, thread_info_ptr);
+        }
+
+        let args = data.args.clone();
+        let engine = caller.engine().clone();
+        let trace_state = data.trace_state.clone();
+        tokio::spawn(async move {
+            if rx.await.is_err() {
+                return;
+            }
+            {
+                let sched = scheduler.lock().unwrap();
+                if sched.exited.is_some() {
+                    return;
+                }
+            }
+            {
+                // eprintln!("[Host] Thread {} started, info={}", thread_id, thread_info_ptr);
+            }
+
+            let mut new_store = Store::new(&engine, DeterministicThread {
+                scheduler: scheduler.clone(),
+                linker: linker.clone(),
+                instance: Some(instance.clone()),
+                stdout: stdout_shared.clone(),
+                args,
+                wasi_fs: wasi_fs.clone(),
+                trace_state: trace_state.clone(),
+            });
+
+            if let Ok(instance) = instance.instantiate_async(&mut new_store).await {
+                if let Ok(start_thread) = instance.get_typed_func::<(i32, i32), ()>(&mut new_store, "wasi_thread_start") {
+                    let _ = start_thread.call_async(&mut new_store, (thread_id, thread_info_ptr,)).await;
+                }
+            }
+            call_scheduler(&mut new_store.data_mut()).await;
+        });
+        thread_id
+    })?;
+
+    // proc_raise: Send a signal to the process (stub)
+    linker.func_wrap("wasi_snapshot_preview1", "proc_raise", |_caller: wasmtime::Caller<'_, DeterministicThread>, _sig: i32| -> i32 {
+        0 // SUCCESS
+    })?;
+
+    // sock_accept: Accept a new incoming connection on a socket (stub)
+    linker.func_wrap("wasi_snapshot_preview1", "sock_accept", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _flags: i32, _result_ptr: i32| -> i32 {
+        0 // SUCCESS
+    })?;
+
+    // sock_recv: Receive a message from a socket (stub)
+    linker.func_wrap("wasi_snapshot_preview1", "sock_recv", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _ri_data_ptr: i32, _ri_data_len: i32, _ri_flags: i32, _ro_datalen_ptr: i32, _ro_flags_ptr: i32| -> i32 {
+        0 // SUCCESS
+    })?;
+
+    // sock_send: Send a message on a socket (stub)
+    linker.func_wrap("wasi_snapshot_preview1", "sock_send", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _si_data_ptr: i32, _si_data_len: i32, _si_flags: i32, _so_datalen_ptr: i32| -> i32 {
+        0 // SUCCESS
+    })?;
+
+    // sock_shutdown: Shut down socket send and receive channels (stub)
+    linker.func_wrap("wasi_snapshot_preview1", "sock_shutdown", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _how: i32| -> i32 {
+        0 // SUCCESS
+    })?;
+
+    // model_checker_select: Choose an option based on the execution trace
+    linker.func_wrap("wasi", "model_checker_select", |caller: wasmtime::Caller<'_, DeterministicThread>, num_options: i32| -> i32 {
+        let trace_state_arc = caller.data().trace_state.clone().expect("trace_state not found");
+        let mut trace_state = trace_state_arc.lock().unwrap();
+
+        if trace_state.trace_index < trace_state.current_trace.choices.len() {
+            let choice = trace_state.current_trace.choices[trace_state.trace_index];
+            trace_state.trace_index += 1;
+            choice
+        } else {
+            // End of trace: emit new traces for all other options
+            for i in 1..num_options {
+                let mut new_choices = trace_state.current_trace.choices.clone();
+                new_choices.push(i);
+                let _ = trace_state.new_traces.send(crate::scheduler::ExecutionTrace { choices: new_choices });
+            }
+            // Follow the 0-th branch
+            trace_state.current_trace.choices.push(0);
+            trace_state.trace_index += 1;
+            0
+        }
+    })?;
+
+    Ok(())
+}

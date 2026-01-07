@@ -1,0 +1,50 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+exports_files([
+    "model_checker_go.stdout",
+    "vfs_test_go.stdout",
+    "env_test_go.stdout",
+    "random_test_go.stdout",
+    "threads_test_go.stdout",
+])
+
+GO_TEST_FILES = [
+    "vfs_test.go",
+    "env_test.go",
+    "random_test.go",
+    "threads_test.go",
+    "model_checker_main.go",
+]
+
+load("//:wasm_test.bzl", "wasm_test")
+
+[
+    go_library(
+        name = f[:-3] + "_lib",
+        srcs = [f],
+        importpath = "deterministic-wasm/src/go/" + f[:-3],
+        visibility = ["//visibility:private"],
+    )
+    for f in GO_TEST_FILES
+]
+
+[
+    go_binary(
+        name = (f[:-3] if f != "model_checker_main.go" else "model_checker") + "_go",
+        out = (f[:-3] if f != "model_checker_main.go" else "model_checker") + "_go.wasm",
+        embed = [":" + f[:-3] + "_lib"],
+        goarch = "wasm",
+        goos = "wasip1",
+        visibility = ["//visibility:public"],
+    )
+    for f in GO_TEST_FILES
+]
+
+[
+    wasm_test(
+        name = (f[:-3] if f != "model_checker_main.go" else "model_checker") + "_go_test",
+        stdout = (f[:-3] if f != "model_checker_main.go" else "model_checker") + "_go.stdout",
+        wasm = ":" + (f[:-3] if f != "model_checker_main.go" else "model_checker") + "_go",
+    )
+    for f in GO_TEST_FILES
+]

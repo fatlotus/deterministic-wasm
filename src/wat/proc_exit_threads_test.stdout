@@ -1,0 +1,7 @@
+Main thread started
+[Host] Spawning thread 1, info=0
+Thread 1 started
+Thread 1 loop...
+Thread 1 loop...
+Main thread calling proc_exit
+[Host] proc_exit called with code 0
