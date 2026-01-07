@@ -48,9 +48,9 @@ cargo build
 ```
 
 #### Compile tests
-Compile all C++ files in the `src/cpp/` directory:
+Tests are now compiled using Bazel. Using `compile-tests.sh` is deprecated and the script has been removed.
 ```bash
-./compile-tests.sh
+bazel build //src/cpp:model_checker_test_wasm
 ```
 
 #### Run a WASM module
@@ -80,10 +80,10 @@ See `tests/model_checker_test.cpp` for a complete example. This test simulates t
 
 ```bash
 # Compile the test
-./compile-tests.sh
+bazel build //src/cpp:model_checker_test_wasm
 
 # Run with the model checker
-cargo run -- --model-check src/cpp/model_checker_test.wasm
+cargo run -- --model-check bazel-bin/src/cpp/model_checker_test.wasm
 ```
 
 If a bug is found (e.g., the final value is incorrect), the program can `abort()`, which the host will report.
@@ -93,7 +93,7 @@ When running with `--model-check`, the host prints a reproduction command for ea
 
 ```bash
 # Example reproduction command
-cargo run -- src/cpp/model_checker_test.wasm --trace 1,0
+cargo run -- bazel-bin/src/cpp/model_checker_test.wasm --trace 1,0
 ```
 
 The `--trace` argument takes a comma-separated list of choices for the `model_checker_select` calls.
