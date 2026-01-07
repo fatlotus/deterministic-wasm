@@ -1,7 +1,0 @@
---- VFS Test ---
-Testing path: /test.txt
-Successfully read: Hello
-Testing path: test.txt
-Successfully read: Hello
-Testing path: ./test.txt
-Successfully read: Hello

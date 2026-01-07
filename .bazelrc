@@ -1,0 +1,6 @@
+# Bazel configuration
+common --apple_generate_dsym
+common --enable_platform_specific_config
+
+# Enable Bzlmod
+common --enable_bzlmod

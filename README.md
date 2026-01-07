@@ -15,44 +15,97 @@ A high-performance, deterministic WebAssembly sandbox built on [Wasmtime](https:
 The project is modularized for clarity and maintainability:
 
 - **[main.rs](src/main.rs)**: The entry point. Handles Wasmtime engine configuration, module loading, and initial instantiation.
-- **[scheduler.rs](src/scheduler.rs)**: The heart of the sandbox. Implements the `Scheduler` which manages `paused_threads` and `delayed_threads` (priority queue for sleeps).
-- **[builtins.rs](src/builtins.rs)**: Contains the hand-rolled WASI snapshot preview1 implementation. This is where `fd_write`, `clock_time_get`, `poll_oneoff`, and `thread-spawn` are defined.
-- **[memory.rs](src/memory.rs)**: Provides safe abstractions for reading and writing to both standard and shared WASM memory.
+- **[scheduler.rs](src/scheduler.rs)**: The heart of the sandbox. Implements the `Scheduler` which manages `paused_threads` and `delayed_threads`.
+- **[wasi_builtins.rs](src/wasi_builtins.rs)**: Contains the hand-rolled WASI snapshot preview1 implementation.
+- **[memory.rs](src/memory.rs)**: Provides safe abstractions for WASM memory access.
+- **[src/cpp/](src/cpp/)**: C++ test cases and their deterministic expectations.
+- **[src/go/](src/go/)**: Go test cases compiled to WASM.
+- **[src/wat/](src/wat/)**: Handwritten WebAssembly Text (WAT) tests.
 
 ## Usage
 
-### 1. Build the host
+### 1. Build and Test with Bazel (Preferred)
+The project is built and tested with Bazel for absolute reproducibility across Rust, Go, and C++.
+
+```bash
+# Build all components (Rust host, Go WASM, C++ tests)
+bazel build //...
+
+# Run all tests
+bazel test //...
+
+# Run the host binary directly
+bazel run //:deterministic-wasm -- src/wat/proc_exit_test.wat
+
+# Run a specific C++ test via Bazel
+bazel test //src/cpp:threads_cpp_test
+```
+
+### 2. Manual Build (Legacy)
+#### Build the host
 ```bash
 cargo build
 ```
 
-### 2. Compile tests
-Compile all C++ files in the `tests/` directory:
+#### Compile tests
+Compile all C++ files in the `src/cpp/` directory:
 ```bash
 ./compile-tests.sh
 ```
 
-### 3. Run a WASM module
+#### Run a WASM module
 ```bash
-cargo run -- tests/example-cpp.wasm
+cargo run -- src/wat/proc_exit_test.wat
 ```
+
+## Model Checker
+
+The deterministic sandbox includes a built-in model checker that can systematically explore different execution paths in multi-threaded programs. This is particularly useful for finding race conditions and other concurrency bugs.
+
+### How it Works
+The model checker finds bugs by exploring different thread interleavings. It achieves this by:
+1.  **WASM Transformation**: Is automatically runs a `transform_wasm` pass on your code to replace standard atomic instructions (`memory.atomic.wait32`, `memory.atomic.notify`) with calls to the model checker's built-in functions.
+2.  **Deterministic Interleaving**: These built-ins yield control back to the scheduler, allowing it to pause threads and explore different wake-up orders.
+3.  **Explicit Choices**: Programs can also use `model_checker_select(num_options)` to explicitly branch execution.
+
+Programs can use the `model_checker_select(num_options)` WASI builtin (imported from the `wasi` module) to indicate a non-deterministic choice. 
+
+When run with the `--model-check` flag, the host will:
+1.  Execute the program multiple times.
+2.  Each time `model_checker_select` is called, the host chooses one of the available options.
+3.  The host maintains a queue of unexplored execution traces and continues running until all paths have been explored.
+
+### Example: Finding a Race Condition
+See `tests/model_checker_test.cpp` for a complete example. This test simulates two threads incrementing a shared variable without locking. By placing a `model_checker_select` call between the read and write operations, the model checker can force interleavings that reveal the race condition.
+
+```bash
+# Compile the test
+./compile-tests.sh
+
+# Run with the model checker
+cargo run -- --model-check src/cpp/model_checker_test.wasm
+```
+
+If a bug is found (e.g., the final value is incorrect), the program can `abort()`, which the host will report.
 
 ## Testing
 
-The sandbox includes an integration test harness that automatically runs all `.wasm` files in the `tests/` directory and compares their `stdout` against expected `.stdout` files.
+The sandbox uses a unified test harness. Tests are defined in `src/cpp/`, `src/go/`, and `src/wat/`. Each test consists of a source file and a corresponding `.stdout` file containing the expected deterministic output.
 
 ### Running Tests
 ```bash
+# Run all tests using Bazel (recommended)
+bazel test //...
+
+# Run all tests using Cargo
 cargo test
 ```
 
 ### Adding New Tests
-1. Add your `.cpp` file to the `tests/` directory.
-2. Run `./compile-tests.sh` to generate the `.wasm` file.
-3. Create a corresponding `.stdout` file with the expected output, or use the "bless" utility to generate it from the current execution:
-```bash
-cargo run --example bless tests/your-test.wasm
-```
+1. Add your source file to the appropriate directory (`src/cpp/`, `src/go/`, or `src/wat/`).
+2. Build the project with `bazel build //...`.
+3. Create an expected `.stdout` file for your test. For C++ tests, use the naming convention `[name]_cpp.stdout`.
+4. The Bazel build will automatically detect and create test targets using the `wasm_test` macro.
 
 ## How it Works
 

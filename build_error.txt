@@ -1,0 +1,242 @@
+       Fresh unicode-ident v1.0.22
+       Fresh cfg-if v1.0.4
+       Fresh log v0.4.29
+       Fresh proc-macro2 v1.0.103
+       Fresh hashbrown v0.16.1
+       Fresh equivalent v1.0.2
+       Fresh find-msvc-tools v0.1.5
+       Fresh quote v1.0.42
+       Fresh serde_core v1.0.228
+       Fresh libc v0.2.178
+       Fresh shlex v1.3.0
+       Fresh version_check v0.9.5
+       Fresh heck v0.5.0
+       Fresh cranelift-srcgen v0.126.1
+       Fresh syn v2.0.111
+       Fresh jobserver v0.1.34
+       Fresh anyhow v1.0.100
+       Fresh errno v0.3.14
+       Fresh cranelift-assembler-x64-meta v0.126.1
+       Fresh allocator-api2 v0.2.21
+       Fresh serde_derive v1.0.228
+       Fresh cc v1.2.50
+       Fresh synstructure v0.13.2
+       Fresh typenum v1.19.0
+       Fresh pulley-macros v39.0.1
+       Fresh foldhash v0.1.5
+       Fresh stable_deref_trait v1.2.1
+       Fresh bumpalo v3.19.1
+       Fresh wasmtime-internal-versioned-export-macros v39.0.1
+       Fresh zerofrom-derive v0.1.6
+       Fresh yoke-derive v0.8.1
+       Fresh rustix v1.1.2
+       Fresh hashbrown v0.15.5
+       Fresh zerovec-derive v0.11.2
+       Fresh cranelift-codegen-shared v0.126.1
+       Fresh smallvec v1.15.1
+       Fresh zerofrom v0.1.6
+       Fresh cranelift-bitset v0.126.1
+       Fresh itoa v1.0.15
+       Fresh ryu v1.0.21
+       Fresh displaydoc v0.2.5
+       Fresh yoke v0.8.1
+       Fresh libm v0.2.15
+       Fresh cranelift-codegen-meta v0.126.1
+       Fresh cranelift-isle v0.126.1
+       Fresh cranelift-entity v0.126.1
+       Fresh gimli v0.32.3
+       Fresh getrandom v0.2.16
+       Fresh zerovec v0.11.5
+       Fresh rustc-hash v2.1.1
+       Fresh pkg-config v0.3.32
+       Fresh leb128fmt v0.1.0
+       Fresh rand_core v0.6.4
+       Fresh target-lexicon v0.13.4
+       Fresh wasmtime-internal-math v39.0.1
+       Fresh thiserror-impl v2.0.17
+       Fresh arbitrary v1.4.2
+       Fresh crc32fast v1.5.0
+       Fresh cranelift-assembler-x64 v0.126.1
+       Fresh io-lifetimes v2.0.4
+       Fresh cranelift-control v0.126.1
+       Fresh pulley-interpreter v39.0.1
+       Fresh thiserror v2.0.17
+       Fresh generic-array v0.14.7
+       Fresh regalloc2 v0.13.3
+       Fresh cranelift-bforest v0.126.1
+       Fresh crossbeam-utils v0.8.21
+       Fresh object v0.37.3
+       Fresh cobs v0.3.0
+       Fresh cranelift-codegen v0.126.1
+       Fresh tinystr v0.8.2
+       Fresh semver v1.0.27
+       Fresh bitflags v2.10.0
+       Fresh memchr v2.7.6
+       Fresh litemap v0.8.1
+       Fresh pin-project-lite v0.2.16
+       Fresh ambient-authority v0.0.2
+       Fresh writeable v0.6.2
+       Fresh serde v1.0.228
+       Fresh wasm-encoder v0.243.0
+       Fresh io-extras v0.18.4
+       Fresh wasmparser v0.240.0
+       Fresh icu_locale_core v2.1.1
+       Fresh wasm-encoder v0.240.0
+       Fresh postcard v1.1.3
+       Fresh crossbeam-epoch v0.9.18
+       Fresh zstd-sys v2.0.16+zstd.1.5.7
+       Fresh block-buffer v0.10.4
+       Fresh crypto-common v0.1.7
+       Fresh fs-set-times v0.20.3
+       Fresh potential_utf v0.1.4
+       Fresh zerotrie v0.2.3
+       Fresh bitmaps v2.1.0
+       Fresh indexmap v2.12.1
+       Fresh unicode-xid v0.2.6
+       Fresh futures-sink v0.3.31
+       Fresh unicode-width v0.2.2
+       Fresh once_cell v1.21.3
+       Fresh id-arena v2.2.1
+       Fresh futures-core v0.3.31
+       Fresh termcolor v1.4.1
+       Fresh wasmtime-internal-component-util v39.0.1
+       Fresh winnow v0.7.14
+       Fresh either v1.15.0
+       Fresh ipnet v2.11.0
+       Fresh maybe-owned v0.3.4
+       Fresh wast v243.0.0
+       Fresh wit-parser v0.240.0
+       Fresh wasmprinter v0.240.0
+       Fresh toml_parser v1.0.6+spec-1.1.0
+       Fresh cap-primitives v3.4.5
+       Fresh futures-channel v0.3.31
+       Fresh icu_provider v2.1.1
+       Fresh sized-chunks v0.6.5
+       Fresh icu_collections v2.1.1
+       Fresh zstd-safe v7.2.4
+       Fresh crossbeam-deque v0.8.6
+       Fresh digest v0.10.7
+       Fresh cpp_demangle v0.4.5
+       Fresh rand_xoshiro v0.6.0
+       Fresh thiserror-impl v1.0.69
+       Fresh dirs-sys-next v0.1.2
+       Fresh toml_datetime v0.7.5+spec-1.1.0
+       Fresh cpufeatures v0.2.17
+       Fresh serde_spanned v1.0.4
+       Fresh unsafe-libyaml v0.2.11
+       Fresh pin-utils v0.1.0
+       Fresh leb128 v0.2.5
+       Fresh toml_writer v1.0.6+spec-1.1.0
+       Fresh fixedbitset v0.4.2
+       Fresh rustc-demangle v0.1.26
+       Fresh slab v0.4.11
+       Fresh futures-task v0.3.31
+       Fresh uuid v1.19.0
+       Fresh futures-io v0.3.31
+       Fresh toml v0.9.10+spec-1.1.0
+       Fresh serde_yaml v0.9.34+deprecated
+       Fresh debugid v0.8.0
+       Fresh futures-util v0.3.31
+       Fresh wasmtime-environ v39.0.1
+       Fresh sha2 v0.10.9
+       Fresh wast v35.0.2
+       Fresh petgraph v0.6.5
+       Fresh directories-next v2.0.0
+       Fresh im-rc v15.1.0
+       Fresh zstd v0.13.3
+       Fresh rayon-core v1.13.0
+       Fresh thiserror v1.0.69
+       Fresh zerocopy v0.8.31
+       Fresh icu_normalizer_data v2.1.1
+       Fresh icu_properties_data v2.1.2
+       Fresh wat v1.243.0
+       Fresh itertools v0.14.0
+       Fresh wasmtime-internal-unwinder v39.0.1
+       Fresh wasmtime-internal-wit-bindgen v39.0.1
+       Fresh getrandom v0.3.4
+       Fresh cranelift-frontend v0.126.1
+       Fresh cranelift-native v0.126.1
+       Fresh serde_json v1.0.145
+       Fresh base64 v0.22.1
+       Fresh fastrand v2.3.0
+       Fresh heck v0.4.1
+       Fresh wasmtime-internal-component-macro v39.0.1
+       Fresh wasmtime-internal-cranelift v39.0.1
+       Fresh fxprof-processed-profile v0.8.1
+       Fresh wasmtime-internal-cache v39.0.1
+       Fresh tempfile v3.23.0
+       Fresh witx v0.9.1
+       Fresh rayon v1.11.0
+       Fresh wasm-compose v0.240.0
+       Fresh icu_normalizer v2.1.1
+       Fresh wasmtime-internal-fiber v39.0.1
+       Fresh ppv-lite86 v0.2.21
+       Fresh icu_properties v2.1.2
+       Fresh futures v0.3.31
+       Fresh wasmtime-internal-jit-debug v39.0.1
+       Fresh cap-std v3.4.5
+       Fresh addr2line v0.25.1
+       Fresh async-trait v0.1.89
+       Fresh wasmtime-internal-jit-icache-coherence v39.0.1
+       Fresh mach2 v0.4.3
+       Fresh encoding_rs v0.8.35
+       Fresh wasmtime-internal-slab v39.0.1
+       Fresh scopeguard v1.2.0
+       Fresh idna_adapter v1.2.1
+       Fresh rand_chacha v0.3.1
+       Fresh parking_lot_core v0.9.12
+       Fresh lock_api v0.4.14
+       Fresh wasmtime v39.0.1
+       Fresh wiggle-generate v39.0.1
+       Fresh tracing-core v0.1.36
+       Fresh tracing-attributes v0.1.31
+       Fresh utf8_iter v1.0.4
+       Fresh core-foundation-sys v0.8.7
+       Fresh bytes v1.11.0
+       Fresh percent-encoding v2.3.2
+       Fresh iana-time-zone v0.1.64
+       Fresh rustix v0.38.44
+       Fresh wiggle-macro v39.0.1
+       Fresh tracing v0.1.44
+       Fresh idna v1.1.0
+       Fresh parking_lot v0.12.5
+       Fresh form_urlencoded v1.2.2
+       Fresh rand v0.8.5
+       Fresh tokio-macros v2.6.0
+       Fresh socket2 v0.6.1
+       Fresh mio v1.1.1
+       Fresh signal-hook-registry v1.4.7
+       Fresh cap-time-ext v3.4.5
+       Fresh cap-fs-ext v3.4.5
+       Fresh wiggle v39.0.1
+       Fresh url v2.5.7
+       Fresh cap-rand v3.4.5
+       Fresh system-interface v0.27.3
+       Fresh tokio v1.48.0
+       Fresh wasmtime-wasi-io v39.0.1
+       Fresh cap-net-ext v3.4.5
+       Fresh wasmtime-wasi v39.0.1
+       Dirty deterministic-wasm v0.1.0 (/Users/jeremyarcher/2025/12-December/deterministic-wasm): couldn't read metadata for file `target/debug/deps/deterministic_wasm-4270e3b5175382a0`
+   Compiling deterministic-wasm v0.1.0 (/Users/jeremyarcher/2025/12-December/deterministic-wasm)
+     Running `rustc --crate-name deterministic_wasm --edition=2024 src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=c1cb5e16420410d7 -C extra-filename=-4270e3b5175382a0 --out-dir /Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps -C incremental=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/incremental -L dependency=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps --extern anyhow=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/libanyhow-2d6b1b8c45c85c59.rlib --extern rand_core=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/librand_core-dee941b3b5d1774b.rlib --extern tokio=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/libtokio-bd68bd399d728ffd.rlib --extern wasmtime=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/libwasmtime-281faddaa4e610d0.rlib --extern wasmtime_wasi=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/libwasmtime_wasi-4771511af9f9bedd.rlib -L native=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/build/wasmtime-a1be0385c4eb536e/out -L native=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/build/zstd-sys-3bf1b9eccd5a682e/out -L native=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/build/wasmtime-internal-jit-debug-55d7fd67b9741fa9/out`
+error[E0599]: no function or associated item named `new` found for struct `WasiCtxView<'a>` in the current scope
+  --> src/main.rs:15:22
+   |
+15 |         WasiCtxView::new(&mut self.wasi, &mut self.table)
+   |                      ^^^ function or associated item not found in `WasiCtxView<'_>`
+
+error[E0308]: mismatched types
+  --> src/main.rs:58:61
+   |
+58 |     wasmtime_wasi::p1::add_to_linker_async(&mut linker, |s| s)?;
+   |                                                             ^ expected `&mut WasiP1Ctx`, found `&mut MyState`
+   |
+   = note: expected mutable reference `&mut WasiP1Ctx`
+              found mutable reference `&mut MyState`
+
+Some errors have detailed explanations: E0308, E0599.
+For more information about an error, try `rustc --explain E0308`.
+error: could not compile `deterministic-wasm` (bin "deterministic-wasm") due to 2 previous errors
+
+Caused by:
+  process didn't exit successfully: `rustc --crate-name deterministic_wasm --edition=2024 src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=c1cb5e16420410d7 -C extra-filename=-4270e3b5175382a0 --out-dir /Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps -C incremental=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/incremental -L dependency=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps --extern anyhow=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/libanyhow-2d6b1b8c45c85c59.rlib --extern rand_core=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/librand_core-dee941b3b5d1774b.rlib --extern tokio=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/libtokio-bd68bd399d728ffd.rlib --extern wasmtime=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/libwasmtime-281faddaa4e610d0.rlib --extern wasmtime_wasi=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/deps/libwasmtime_wasi-4771511af9f9bedd.rlib -L native=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/build/wasmtime-a1be0385c4eb536e/out -L native=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/build/zstd-sys-3bf1b9eccd5a682e/out -L native=/Users/jeremyarcher/2025/12-December/deterministic-wasm/target/debug/build/wasmtime-internal-jit-debug-55d7fd67b9741fa9/out` (exit status: 1)

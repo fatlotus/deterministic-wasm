@@ -2,6 +2,7 @@
 name = "deterministic-wasm"
 version = "0.1.0"
 edition = "2024"
+default-run = "deterministic-wasm"
 
 [dependencies]
 anyhow = "1.0.100"
@@ -11,5 +12,8 @@ wasmtime-wasi = "40"
 rand_core = "0.6.4"
 wasmtime-wasi-threads = "40.0.0"
 cpu-time = "1.0.0"
+clap = { version = "4.5.23", features = ["derive"] }
+walrus = "0.20.0"
+wat = "1.0.0"
 [dev-dependencies]
 similar = "2.4.0"
