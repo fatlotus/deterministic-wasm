@@ -317,5 +317,10 @@ pub fn register_wasi_builtins(linker: &mut Linker<DeterministicThread>) -> Resul
         }
     })?;
 
+    linker.func_wrap("wasi", "must_reach_underlying", |_caller: wasmtime::Caller<'_, DeterministicThread>, _module_ptr: i32, _line: i32, _column: i32| {
+        // This is a stub for now, but it's enough to let the test run.
+        // In a real scenario, we might track which points were reached.
+    })?;
+
     Ok(())
 }

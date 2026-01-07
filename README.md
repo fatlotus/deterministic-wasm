@@ -88,6 +88,16 @@ cargo run -- --model-check src/cpp/model_checker_test.wasm
 
 If a bug is found (e.g., the final value is incorrect), the program can `abort()`, which the host will report.
 
+### Reproducing Bugs
+When running with `--model-check`, the host prints a reproduction command for each execution trace. You can use this command to run just that specific interleaving:
+
+```bash
+# Example reproduction command
+cargo run -- src/cpp/model_checker_test.wasm --trace 1,0
+```
+
+The `--trace` argument takes a comma-separated list of choices for the `model_checker_select` calls.
+
 ## Testing
 
 The sandbox uses a unified test harness. Tests are defined in `src/cpp/`, `src/go/`, and `src/wat/`. Each test consists of a source file and a corresponding `.stdout` file containing the expected deterministic output.
