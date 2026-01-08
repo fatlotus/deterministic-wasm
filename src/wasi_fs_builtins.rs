@@ -354,7 +354,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // fd_fdstat_set_flags: Set file descriptor flags (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_fdstat_set_flags", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _flags: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_seek: Seek in file descriptor
@@ -439,42 +439,42 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // fd_advise: Provide advice about an open file (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_advise", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _offset: i64, _len: i64, _advice: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_allocate: Allocate extra space for a file (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_allocate", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _offset: i64, _len: i64| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_datasync: Synchronize the data of a file to disk (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_datasync", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_fdstat_set_rights: Set the rights of a file descriptor (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_fdstat_set_rights", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _fs_rights_base: u64, _fs_rights_inheriting: u64| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_filestat_set_size: Adjust the size of an open file (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_filestat_set_size", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _size: i64| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_filestat_set_times: Adjust the times of an open file (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_filestat_set_times", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _atim: i64, _mtim: i64, _fst_flags: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_pread: Read from a file descriptor at a given offset (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_pread", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _iovs_ptr: i32, _iovs_len: i32, _offset: i64, _nread_ptr: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_pwrite: Write to a file descriptor at a given offset (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_pwrite", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _iovs_ptr: i32, _iovs_len: i32, _offset: i64, _nwritten_ptr: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_readdir: Read directory entries from a directory
@@ -615,12 +615,12 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // fd_renumber: Atomically replace a file descriptor (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_renumber", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _to: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_sync: Synchronize the data and metadata of a file to disk (stub)
     linker.func_wrap("wasi_snapshot_preview1", "fd_sync", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_tell: Return the current offset of a file descriptor
@@ -644,7 +644,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // path_create_directory: Create a directory (stub)
     linker.func_wrap("wasi_snapshot_preview1", "path_create_directory", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _path_ptr: i32, _path_len: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_filestat_get: Return the attributes of a file or directory
@@ -691,37 +691,37 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // path_filestat_set_times: Adjust the times of a file or directory (stub)
     linker.func_wrap("wasi_snapshot_preview1", "path_filestat_set_times", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _flags: i32, _path_ptr: i32, _path_len: i32, _atim: i64, _mtim: i64, _fst_flags: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_link: Create a hard link (stub)
     linker.func_wrap("wasi_snapshot_preview1", "path_link", |_caller: wasmtime::Caller<'_, DeterministicThread>, _old_fd: i32, _old_flags: i32, _old_path_ptr: i32, _old_path_len: i32, _new_fd: i32, _new_path_ptr: i32, _new_path_len: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_readlink: Read the contents of a symbolic link (stub)
     linker.func_wrap("wasi_snapshot_preview1", "path_readlink", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _path_ptr: i32, _path_len: i32, _buf_ptr: i32, _buf_len: i32, _bufused_ptr: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_remove_directory: Remove a directory (stub)
     linker.func_wrap("wasi_snapshot_preview1", "path_remove_directory", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _path_ptr: i32, _path_len: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_rename: Rename a file or directory (stub)
     linker.func_wrap("wasi_snapshot_preview1", "path_rename", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _old_path_ptr: i32, _old_path_len: i32, _new_fd: i32, _new_path_ptr: i32, _new_path_len: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_symlink: Create a symbolic link (stub)
     linker.func_wrap("wasi_snapshot_preview1", "path_symlink", |_caller: wasmtime::Caller<'_, DeterministicThread>, _old_path_ptr: i32, _old_path_len: i32, _fd: i32, _new_path_ptr: i32, _new_path_len: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_unlink_file: Unlink a file (stub)
     linker.func_wrap("wasi_snapshot_preview1", "path_unlink_file", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _path_ptr: i32, _path_len: i32| -> i32 {
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     Ok(())
