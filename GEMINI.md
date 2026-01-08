@@ -9,12 +9,20 @@ To support multiple agents working in parallel, please follow these instructions
    ```
 3. **Work in the Subdirectory**: Perform all yours changes, tests, and commits within that subdirectory.
 4. **Commit Your Changes**: Once your task is complete, commit your changes within the subdirectory's repository.
-5. **Merge Back to Root**: From the root directory, merge your changes back.
+5. **Stash Changes**: If you have uncommitted changes in the root directory, stash them before merging to avoid conflicts.
+   ```bash
+   git stash
+   ```
+6. **Merge Back to Root**: From the root directory, merge your changes back.
    ```bash
    git pull ./workspaces/agent-unique-id main --no-rebase
    ```
-6. **Handle Conflicts**: Resolve any merge conflicts that arise in the root directory.
-7. **Clean Up**: Remove your isolated subdirectory after the merge is successful.
+7. **Pop Stash**: If you stashed changes, pop them back.
+   ```bash
+   git stash pop
+   ```
+8. **Handle Conflicts**: Resolve any merge conflicts that arise in the root directory.
+9. **Clean Up**: Remove your isolated subdirectory after the merge is successful.
 
 ## Example Workflow
 
@@ -27,6 +35,8 @@ cd workspaces/my-feature
 git add .
 git commit -m "feat: my new feature"
 cd ../..
+git stash
 git pull ./workspaces/my-feature main --no-rebase
+git stash pop
 rm -rf workspaces/my-feature
 ```
