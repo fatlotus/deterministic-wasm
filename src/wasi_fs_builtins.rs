@@ -386,7 +386,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_fdstat_set_flags(fd={}, flags={})", fd, flags);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_seek: Seek in file descriptor
@@ -483,7 +483,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_advise(fd={}, offset={}, len={}, advice={})", fd, offset, len, advice);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_allocate: Allocate extra space for a file (stub)
@@ -492,7 +492,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_allocate(fd={}, offset={}, len={})", fd, offset, len);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_datasync: Synchronize the data of a file to disk (stub)
@@ -501,7 +501,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_datasync(fd={})", fd);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_fdstat_set_rights: Set the rights of a file descriptor (stub)
@@ -510,7 +510,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_fdstat_set_rights(fd={}, fs_rights_base={}, fs_rights_inheriting={})", fd, fs_rights_base, fs_rights_inheriting);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_filestat_set_size: Adjust the size of an open file (stub)
@@ -519,7 +519,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_filestat_set_size(fd={}, size={})", fd, size);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_filestat_set_times: Adjust the times of an open file (stub)
@@ -528,7 +528,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_filestat_set_times(fd={}, atim={}, mtim={}, fst_flags={})", fd, atim, mtim, fst_flags);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_pread: Read from a file descriptor at a given offset (stub)
@@ -537,7 +537,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_pread(fd={}, iovs_ptr={}, iovs_len={}, offset={}, nread_ptr={})", fd, iovs_ptr, iovs_len, offset, nread_ptr);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_pwrite: Write to a file descriptor at a given offset (stub)
@@ -546,7 +546,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_pwrite(fd={}, iovs_ptr={}, iovs_len={}, offset={}, nwritten_ptr={})", fd, iovs_ptr, iovs_len, offset, nwritten_ptr);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_readdir: Read directory entries from a directory
@@ -695,7 +695,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_renumber(fd={}, to={})", fd, to);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_sync: Synchronize the data and metadata of a file to disk (stub)
@@ -704,7 +704,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] fd_sync(fd={})", fd);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // fd_tell: Return the current offset of a file descriptor
@@ -736,7 +736,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] path_create_directory(fd={}, path_ptr={}, path_len={})", fd, path_ptr, path_len);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_filestat_get: Return the attributes of a file or directory
@@ -791,7 +791,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] path_filestat_set_times(fd={}, flags={}, path_ptr={}, path_len={}, atim={}, mtim={}, fst_flags={})", fd, flags, path_ptr, path_len, atim, mtim, fst_flags);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_link: Create a hard link (stub)
@@ -800,7 +800,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] path_link(old_fd={}, old_flags={}, old_path_ptr={}, old_path_len={}, new_fd={}, new_path_ptr={}, new_path_len={})", old_fd, old_flags, old_path_ptr, old_path_len, new_fd, new_path_ptr, new_path_len);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_readlink: Read the contents of a symbolic link (stub)
@@ -809,7 +809,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] path_readlink(fd={}, path_ptr={}, path_len={}, buf_ptr={}, buf_len={}, bufused_ptr={})", fd, path_ptr, path_len, buf_ptr, buf_len, bufused_ptr);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_remove_directory: Remove a directory (stub)
@@ -818,7 +818,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] path_remove_directory(fd={}, path_ptr={}, path_len={})", fd, path_ptr, path_len);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_rename: Rename a file or directory (stub)
@@ -827,7 +827,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] path_rename(fd={}, old_path_ptr={}, old_path_len={}, new_fd={}, new_path_ptr={}, new_path_len={})", fd, old_path_ptr, old_path_len, new_fd, new_path_ptr, new_path_len);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_symlink: Create a symbolic link (stub)
@@ -836,7 +836,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] path_symlink(old_path_ptr={}, old_path_len={}, fd={}, new_path_ptr={}, new_path_len={})", old_path_ptr, old_path_len, fd, new_path_ptr, new_path_len);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     // path_unlink_file: Unlink a file (stub)
@@ -845,7 +845,7 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let mut stdout = caller.data().stdout.lock().unwrap();
             let _ = writeln!(stdout, "[WASI] path_unlink_file(fd={}, path_ptr={}, path_len={})", fd, path_ptr, path_len);
         }
-        0 // SUCCESS
+        58 // ENOSYS
     })?;
 
     Ok(())
