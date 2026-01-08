@@ -67,6 +67,7 @@ pub async fn run_wasm(
     wasm_module: Arc<WasmModule>,
     stdout: Arc<Mutex<Box<dyn Write + Send>>>,
     args: Vec<String>,
+    envs: Vec<(String, String)>,
     vfs_host_path: Option<&Path>,
     trace: Option<ExecutionTrace>,
     new_traces: tokio::sync::mpsc::UnboundedSender<ExecutionTrace>,
@@ -115,6 +116,7 @@ pub async fn run_wasm(
         instance: None,
         stdout: shared_stdout.clone(),
         args: args.clone(),
+        envs: envs.clone(),
         wasi_fs: Some(wasi_fs.clone()),
         trace_state: Some(trace_state.clone()),
     });
@@ -138,6 +140,7 @@ pub async fn run_wasm(
         instance: Some(instance_pre.clone()),
         stdout: shared_stdout.clone(),
         args,
+        envs,
         wasi_fs: Some(wasi_fs),
         trace_state: Some(trace_state),
     });

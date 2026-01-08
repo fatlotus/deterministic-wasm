@@ -58,6 +58,7 @@ pub struct DeterministicThread {
     pub instance: Option<InstancePre<DeterministicThread>>,
     pub stdout: Arc<Mutex<Box<dyn Write + Send>>>,
     pub args: Vec<String>,
+    pub envs: Vec<(String, String)>,
     pub wasi_fs: Option<Arc<crate::vfs::WasiFs>>,
     pub trace_state: Option<Arc<Mutex<ExecutionTraceState>>>,
 }

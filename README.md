@@ -58,6 +58,13 @@ bazel build //src/cpp:model_checker_test_wasm
 cargo run -- src/wat/proc_exit_test.wat
 ```
 
+#### Passing Environment Variables
+You can set environment variables for the WASM simulation using the `--env` flag. Multiple variables can be set by repeating the flag.
+
+```bash
+cargo run -- --env KEY1=value1 --env KEY2=value2 src/wat/env_test.wat
+```
+
 ## Model Checker
 
 The deterministic sandbox includes a built-in model checker that can systematically explore different execution paths in multi-threaded programs. This is particularly useful for finding race conditions and other concurrency bugs.

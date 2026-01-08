@@ -11,6 +11,7 @@ async fn main() -> Result<()> {
     let mut mapdir = None;
     let mut path_str = None;
     let mut wasm_args = Vec::new();
+    let mut envs = Vec::new();
 
     let mut model_check = false;
     let mut trace_arg = None;
@@ -25,6 +26,14 @@ async fn main() -> Result<()> {
         } else if args[i] == "--trace" && i + 1 < args.len() {
             trace_arg = Some(args[i+1].clone());
             i += 2;
+        } else if args[i] == "--env" && i + 1 < args.len() {
+             let env_pair = &args[i+1];
+             if let Some((key, value)) = env_pair.split_once('=') {
+                 envs.push((key.to_string(), value.to_string()));
+             } else {
+                 eprintln!("Warning: Invalid env format '{}', expected KEY=VALUE", env_pair);
+             }
+             i += 2;
         } else if path_str.is_none() {
             path_str = Some(&args[i]);
             wasm_args.push(args[i].clone());
@@ -91,6 +100,9 @@ async fn main() -> Result<()> {
             if idx == 0 { continue; } // skip path
             repro_cmd.push_str(&format!(" {}", arg));
         }
+        for (key, value) in &envs {
+            repro_cmd.push_str(&format!(" --env {}={}", key, value));
+        }
         if !trace_str.is_empty() {
             repro_cmd.push_str(&format!(" --trace {}", trace_str));
         }
@@ -102,6 +114,7 @@ async fn main() -> Result<()> {
             wasm_module.clone(),
             stdout.clone(),
             wasm_args.clone(),
+            envs.clone(),
             mapdir.map(Path::new),
             Some(trace),
             tx.clone()

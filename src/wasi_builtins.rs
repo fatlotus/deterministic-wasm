@@ -192,20 +192,44 @@ pub fn register_wasi_builtins(linker: &mut Linker<DeterministicThread>) -> Resul
         Err(anyhow::anyhow!("proc_exit"))
     })?;
 
-    // environ_sizes_get: Get environment variable sizes (stub)
+    // environ_sizes_get: Get environment variable sizes
     linker.func_wrap("wasi_snapshot_preview1", "environ_sizes_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, count_ptr: i32, buf_size_ptr: i32| -> i32 {
+        let envs = caller.data().envs.clone();
         let export = caller.get_export("memory");
         if let Some(export) = export {
-            if write_mem(&mut caller, &export, count_ptr as usize, &0u32.to_le_bytes()).is_ok() &&
-               write_mem(&mut caller, &export, buf_size_ptr as usize, &0u32.to_le_bytes()).is_ok() {
+            let count = envs.len() as u32;
+            let mut buf_size = 0u32;
+            for (key, value) in &envs {
+                buf_size += (key.len() + 1 + value.len() + 1) as u32; // key=value\0
+            }
+            if write_mem(&mut caller, &export, count_ptr as usize, &count.to_le_bytes()).is_ok() &&
+               write_mem(&mut caller, &export, buf_size_ptr as usize, &buf_size.to_le_bytes()).is_ok() {
                 return 0; // SUCCESS
             }
         }
         29 // EIO
     })?;
 
-    // environ_get: Get environment variables (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "environ_get", |_caller: wasmtime::Caller<'_, DeterministicThread>, _environ_ptr: i32, _environ_buf_ptr: i32| -> i32 {
+    // environ_get: Get environment variables
+    linker.func_wrap("wasi_snapshot_preview1", "environ_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, environ_ptr: i32, environ_buf_ptr: i32| -> i32 {
+        let envs = caller.data().envs.clone();
+        let export = caller.get_export("memory").ok_or_else(|| anyhow::anyhow!("memory export not found")).unwrap();
+        
+        let mut current_buf_offset = 0;
+        for (i, (key, value)) in envs.iter().enumerate() {
+            let env_str = format!("{}={}", key, value);
+            let env_ptr = environ_buf_ptr + current_buf_offset as i32;
+            let env_bytes = env_str.as_bytes();
+            
+            // Write pointer to environ array
+            write_mem(&mut caller, &export, (environ_ptr + (i * 4) as i32) as usize, &env_ptr.to_le_bytes()).unwrap();
+            
+            // Write string + null terminator to buffer
+            write_mem(&mut caller, &export, (environ_buf_ptr + current_buf_offset as i32) as usize, env_bytes).unwrap();
+            write_mem(&mut caller, &export, (environ_buf_ptr + current_buf_offset as i32 + env_bytes.len() as i32) as usize, &[0u8]).unwrap();
+            
+            current_buf_offset += env_bytes.len() + 1;
+        }
         0 // SUCCESS
     })?;
 
@@ -233,6 +257,7 @@ pub fn register_wasi_builtins(linker: &mut Linker<DeterministicThread>) -> Resul
         }
 
         let args = data.args.clone();
+        let envs = data.envs.clone();
         let engine = caller.engine().clone();
         let trace_state = data.trace_state.clone();
         tokio::spawn(async move {
@@ -255,6 +280,7 @@ pub fn register_wasi_builtins(linker: &mut Linker<DeterministicThread>) -> Resul
                 instance: Some(instance.clone()),
                 stdout: stdout_shared.clone(),
                 args,
+                envs,
                 wasi_fs: wasi_fs.clone(),
                 trace_state: trace_state.clone(),
             });

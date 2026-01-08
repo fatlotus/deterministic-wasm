@@ -72,9 +72,17 @@ async fn run_single_test(path: &Path, stdout_path: &Path) {
     
     let (tx, _rx) = tokio::sync::mpsc::unbounded_channel();
     let wasm_module = compile_module(path).expect("failed to compile wasm");
-    run_wasm(wasm_module, Arc::new(Mutex::new(Box::new(buffer) as Box<dyn Write + Send>)), vec![], Some(Path::new("test_data")), None, tx)
-        .await
-        .expect("failed to run wasm");
+    run_wasm(
+        wasm_module,
+        Arc::new(Mutex::new(Box::new(buffer) as Box<dyn Write + Send>)),
+        vec![],
+        vec![], // envs
+        Some(Path::new("test_data")),
+        None,
+        tx
+    )
+    .await
+    .expect("failed to run wasm");
 
     let expected_output = fs::read_to_string(stdout_path).expect("failed to read expected output");
     let actual_output = output_vec.lock().unwrap();
