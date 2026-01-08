@@ -1,0 +1,59 @@
+load("//:wasm_test.bzl", "wasm_test")
+
+# Export stdout files for test expectations
+exports_files([
+    "random_test_python.stdout",
+    "env_test_python.stdout",
+    "vfs_test_python.stdout",
+    "argv0_test_python.stdout",
+    "readdir_test_python.stdout",
+    "threads_test_python.stdout",
+    "model_checker_python.stdout",
+])
+
+PYTHON_TEST_FILES = [
+    ("random_test.py", "random_test_python.stdout"),
+    ("env_test.py", "env_test_python.stdout"),
+    ("vfs_test.py", "vfs_test_python.stdout"),
+    ("argv0_test.py", "argv0_test_python.stdout"),
+    ("readdir_test.py", "readdir_test_python.stdout"),
+    ("threads_test.py", "threads_test_python.stdout"),
+    ("model_checker_main.py", "model_checker_python.stdout"),
+]
+
+# Copy Python stdlib to make it available via VFS
+genrule(
+    name = "copy_python_stdlib",
+    srcs = ["@python_wasi//:python_runtime"],
+    outs = ["python_stdlib.tar"],
+    cmd = """
+        # Create a tar of the Python stdlib from the python_wasi repository
+        tar -cf $@ -C $(BINDIR)/external/+python_wasi+python_wasi lib
+    """,
+)
+
+# Copy Python scripts to test_data directory so they're available via VFS
+[
+    genrule(
+        name = script[:-3] + "_copy_to_test_data",
+        srcs = [script],
+        outs = ["test_data_" + script],
+        cmd = "cp $< $@",
+    )
+    for script, _ in PYTHON_TEST_FILES
+]
+
+# Create wasm_test targets for each Python test
+# The Python runtime will be invoked with the script path as an argument
+# We set PYTHONHOME to /usr/local to help Python find its stdlib
+[
+    wasm_test(
+        name = (script[:-3] if script != "model_checker_main.py" else "model_checker") + "_python_test",
+        wasm = "@python_wasi//:python.wasm",
+        stdout = stdout,
+        args = [script],  # Pass the script path as an argument
+        data = [":" + script[:-3] + "_copy_to_test_data"],
+        env = {"PYTHONHOME": "/usr/local"},
+    )
+    for script, stdout in PYTHON_TEST_FILES
+]

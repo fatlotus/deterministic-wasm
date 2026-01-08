@@ -1,0 +1,6 @@
+[Host] random_get called for 32 bytes
+--- Readdir Test ---
+Directory listing for /:
+  hello.py
+  test.txt
+[Host] proc_exit called with code 0

@@ -21,6 +21,7 @@ The project is modularized for clarity and maintainability:
 - **[src/cpp/](src/cpp/)**: C++ test cases and their deterministic expectations.
 - **[src/go/](src/go/)**: Go test cases compiled to WASM.
 - **[src/wat/](src/wat/)**: Handwritten WebAssembly Text (WAT) tests.
+- **[src/python/](src/python/)**: Python test cases (experimental - requires Python stdlib VFS support).
 
 ## Usage
 
@@ -107,7 +108,9 @@ The `--trace` argument takes a comma-separated list of choices for the `model_ch
 
 ## Testing
 
-The sandbox uses a unified test harness. Tests are defined in `src/cpp/`, `src/go/`, and `src/wat/`. Each test consists of a source file and a corresponding `.stdout` file containing the expected deterministic output.
+The sandbox uses a unified test harness. Tests are defined in `src/cpp/`, `src/go/`, `src/python/`, and `src/wat/`. Each test consists of a source file and a corresponding `.stdout` file containing the expected deterministic output.
+
+**Note**: Python tests are currently experimental and require additional VFS infrastructure to make the Python standard library accessible to the WASM runtime.
 
 ### Running Tests
 ```bash
@@ -119,9 +122,9 @@ cargo test
 ```
 
 ### Adding New Tests
-1. Add your source file to the appropriate directory (`src/cpp/`, `src/go/`, or `src/wat/`).
+1. Add your source file to the appropriate directory (`src/cpp/`, `src/go/`, `src/python/`, or `src/wat/`).
 2. Build the project with `bazel build //...`.
-3. Create an expected `.stdout` file for your test. For C++ tests, use the naming convention `[name]_cpp.stdout`.
+3. Create an expected `.stdout` file for your test. For C++ tests, use the naming convention `[name]_cpp.stdout`. For Python tests, use `[name]_python.stdout`.
 4. The Bazel build will automatically detect and create test targets using the `wasm_test` macro.
 
 ## How it Works

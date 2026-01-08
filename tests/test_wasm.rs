@@ -70,12 +70,18 @@ async fn run_single_test(path: &Path, stdout_path: &Path) {
     let output_vec = Arc::new(Mutex::new(Vec::new()));
     let buffer = Buffer(output_vec.clone());
     
+    // Read arguments from WASM_ARGS environment variable if present
+    let args = std::env::var("WASM_ARGS")
+        .ok()
+        .map(|s| s.split(',').map(|arg| arg.to_string()).collect())
+        .unwrap_or_else(Vec::new);
+    
     let (tx, _rx) = tokio::sync::mpsc::unbounded_channel();
     let wasm_module = compile_module(path).expect("failed to compile wasm");
     run_wasm(
         wasm_module,
         Arc::new(Mutex::new(Box::new(buffer) as Box<dyn Write + Send>)),
-        vec![],
+        args,
         vec![], // envs
         Some(Path::new("test_data")),
         None,

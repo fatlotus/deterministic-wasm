@@ -33,3 +33,7 @@ go_sdk.download(version = "1.25.0")
 # WASI SDK configuration
 wasi_sdk = use_extension("//:wasi_sdk_extension.bzl", "wasi_sdk")
 use_repo(wasi_sdk, "wasi_sdk_linux", "wasi_sdk_macos_arm64", "wasi_sdk_macos_x86_64")
+
+# Python WASI configuration
+python_wasi = use_extension("//:python_wasi_extension.bzl", "python_wasi")
+use_repo(python_wasi, "python_wasi")
