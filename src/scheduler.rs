@@ -61,6 +61,7 @@ pub struct DeterministicThread {
     pub envs: Vec<(String, String)>,
     pub wasi_fs: Option<Arc<crate::vfs::WasiFs>>,
     pub trace_state: Option<Arc<Mutex<ExecutionTraceState>>>,
+    pub trace_wasi: bool,
 }
 
 pub async fn call_scheduler(state: &mut DeterministicThread) {

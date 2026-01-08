@@ -79,7 +79,8 @@ async fn run_single_test(path: &Path, stdout_path: &Path) {
         vec![], // envs
         Some(Path::new("test_data")),
         None,
-        tx
+        tx,
+        false
     )
     .await
     .expect("failed to run wasm");

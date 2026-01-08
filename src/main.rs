@@ -14,6 +14,7 @@ async fn main() -> Result<()> {
     let mut envs = Vec::new();
 
     let mut model_check = false;
+    let mut trace_wasi = false;
     let mut trace_arg = None;
     let mut i = 1;
     while i < args.len() {
@@ -22,6 +23,9 @@ async fn main() -> Result<()> {
             i += 2;
         } else if args[i] == "--model-check" {
             model_check = true;
+            i += 1;
+        } else if args[i] == "--trace-wasi" {
+            trace_wasi = true;
             i += 1;
         } else if args[i] == "--trace" && i + 1 < args.len() {
             trace_arg = Some(args[i+1].clone());
@@ -117,7 +121,8 @@ async fn main() -> Result<()> {
             envs.clone(),
             mapdir.map(Path::new),
             Some(trace),
-            tx.clone()
+            tx.clone(),
+            trace_wasi
         ).await?;
 
         timings.compile_wall = compile_wall;

@@ -8,6 +8,10 @@ use std::io::Write;
 pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Result<()> {
     // fd_write: Used for printing to stdout/stderr or writing to files
     linker.func_wrap("wasi_snapshot_preview1", "fd_write", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, iovs_ptr: i32, iovs_len: i32, nwritten_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_write(fd={}, iovs_ptr={}, iovs_len={}, nwritten_ptr={})", fd, iovs_ptr, iovs_len, nwritten_ptr);
+        }
         if fd == 1 || fd == 2 {
             // Handle stdout/stderr
             return (|| -> Result<i32> {
@@ -103,6 +107,10 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // fd_read: Read from file descriptor
     linker.func_wrap("wasi_snapshot_preview1", "fd_read", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, iovs_ptr: i32, iovs_len: i32, nread_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_read(fd={}, iovs_ptr={}, iovs_len={}, nread_ptr={})", fd, iovs_ptr, iovs_len, nread_ptr);
+        }
         if fd == 0 {
             let export = match caller.get_export("memory") {
                 Some(e) => e,
@@ -180,6 +188,10 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // fd_close: Closing a file descriptor
     linker.func_wrap("wasi_snapshot_preview1", "fd_close", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_close(fd={})", fd);
+        }
         let wasi_fs = caller.data().wasi_fs.as_ref();
         if let Some(fs) = wasi_fs {
             let mut open_files = fs.open_files.lock().unwrap();
@@ -192,6 +204,10 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // fd_fdstat_get: Get file descriptor statistics
     linker.func_wrap("wasi_snapshot_preview1", "fd_fdstat_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, result_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_fdstat_get(fd={}, result_ptr={})", fd, result_ptr);
+        }
         let wasi_fs = match caller.data().wasi_fs.as_ref() {
             Some(fs) => fs.clone(),
             None => return 8, // EBADF
@@ -249,6 +265,10 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // fd_prestat_get: Get preopen statistics
     linker.func_wrap("wasi_snapshot_preview1", "fd_prestat_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, result_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_prestat_get(fd={}, result_ptr={})", fd, result_ptr);
+        }
         if fd == 3 {
              let export = caller.get_export("memory");
              if let Some(export) = export {
@@ -267,6 +287,10 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // fd_prestat_dir_name: Get preopen directory name
     linker.func_wrap("wasi_snapshot_preview1", "fd_prestat_dir_name", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, path_ptr: i32, path_len: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_prestat_dir_name(fd={}, path_ptr={}, path_len={})", fd, path_ptr, path_len);
+        }
         if fd == 3 {
              let export = caller.get_export("memory");
              if let Some(export) = export {
@@ -281,7 +305,11 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
         8 // EBADF
     })?;
     // path_open: Open path
-    linker.func_wrap("wasi_snapshot_preview1", "path_open", |mut caller: wasmtime::Caller<'_, DeterministicThread>, _dir_fd: i32, _dirflags: i32, path_ptr: i32, path_len: i32, _oflags: i32, _fs_rights_base: u64, _fs_rights_inheriting: u64, _fdflags: i32, result_ptr: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_open", |mut caller: wasmtime::Caller<'_, DeterministicThread>, dir_fd: i32, dirflags: i32, path_ptr: i32, path_len: i32, oflags: i32, fs_rights_base: u64, fs_rights_inheriting: u64, fdflags: i32, result_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_open(dir_fd={}, dirflags={}, path_ptr={}, path_len={}, oflags={}, fs_rights_base={}, fs_rights_inheriting={}, fdflags={}, result_ptr={})", dir_fd, dirflags, path_ptr, path_len, oflags, fs_rights_base, fs_rights_inheriting, fdflags, result_ptr);
+        }
         let (_path_str_out, new_fd) = (|| -> Result<(String, u32)> {
             let export = caller.get_export("memory").ok_or_else(|| anyhow::anyhow!("memory export not found"))?;
             let mut path_bytes = vec![0u8; path_len as usize];
@@ -292,9 +320,9 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
             let dir_path = {
                 let open_files = wasi_fs.open_files.lock().unwrap();
-                match open_files.get(&(_dir_fd as u32)) {
+                match open_files.get(&(dir_fd as u32)) {
                     Some(open_file) => open_file.path.clone(),
-                    None => return Err(anyhow!("Bad dir_fd: {}", _dir_fd)),
+                    None => return Err(anyhow!("Bad dir_fd: {}", dir_fd)),
                 }
             };
             
@@ -353,12 +381,20 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
     })?;
 
     // fd_fdstat_set_flags: Set file descriptor flags (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_fdstat_set_flags", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _flags: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_fdstat_set_flags", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, flags: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_fdstat_set_flags(fd={}, flags={})", fd, flags);
+        }
         0 // SUCCESS
     })?;
 
     // fd_seek: Seek in file descriptor
     linker.func_wrap("wasi_snapshot_preview1", "fd_seek", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, offset: i64, whence: i32, result_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_seek(fd={}, offset={}, whence={}, result_ptr={})", fd, offset, whence, result_ptr);
+        }
         if fd >= 0 && fd <= 2 {
             return 52; // ESPIPE - cannot seek on stdin/stdout/stderr
         }
@@ -397,6 +433,10 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
 
     // fd_filestat_get: Get file descriptor statistics
     linker.func_wrap("wasi_snapshot_preview1", "fd_filestat_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, result_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_filestat_get(fd={}, result_ptr={})", fd, result_ptr);
+        }
         if fd == 0 || fd == 1 || fd == 2 {
             let mut stat = [0u8; 64];
             stat[16] = 2; // Character device
@@ -438,47 +478,83 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
     })?;
 
     // fd_advise: Provide advice about an open file (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_advise", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _offset: i64, _len: i64, _advice: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_advise", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, offset: i64, len: i64, advice: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_advise(fd={}, offset={}, len={}, advice={})", fd, offset, len, advice);
+        }
         0 // SUCCESS
     })?;
 
     // fd_allocate: Allocate extra space for a file (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_allocate", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _offset: i64, _len: i64| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_allocate", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, offset: i64, len: i64| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_allocate(fd={}, offset={}, len={})", fd, offset, len);
+        }
         0 // SUCCESS
     })?;
 
     // fd_datasync: Synchronize the data of a file to disk (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_datasync", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_datasync", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_datasync(fd={})", fd);
+        }
         0 // SUCCESS
     })?;
 
     // fd_fdstat_set_rights: Set the rights of a file descriptor (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_fdstat_set_rights", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _fs_rights_base: u64, _fs_rights_inheriting: u64| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_fdstat_set_rights", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, fs_rights_base: u64, fs_rights_inheriting: u64| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_fdstat_set_rights(fd={}, fs_rights_base={}, fs_rights_inheriting={})", fd, fs_rights_base, fs_rights_inheriting);
+        }
         0 // SUCCESS
     })?;
 
     // fd_filestat_set_size: Adjust the size of an open file (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_filestat_set_size", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _size: i64| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_filestat_set_size", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, size: i64| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_filestat_set_size(fd={}, size={})", fd, size);
+        }
         0 // SUCCESS
     })?;
 
     // fd_filestat_set_times: Adjust the times of an open file (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_filestat_set_times", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _atim: i64, _mtim: i64, _fst_flags: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_filestat_set_times", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, atim: i64, mtim: i64, fst_flags: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_filestat_set_times(fd={}, atim={}, mtim={}, fst_flags={})", fd, atim, mtim, fst_flags);
+        }
         0 // SUCCESS
     })?;
 
     // fd_pread: Read from a file descriptor at a given offset (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_pread", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _iovs_ptr: i32, _iovs_len: i32, _offset: i64, _nread_ptr: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_pread", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, iovs_ptr: i32, iovs_len: i32, offset: i64, nread_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_pread(fd={}, iovs_ptr={}, iovs_len={}, offset={}, nread_ptr={})", fd, iovs_ptr, iovs_len, offset, nread_ptr);
+        }
         0 // SUCCESS
     })?;
 
     // fd_pwrite: Write to a file descriptor at a given offset (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_pwrite", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _iovs_ptr: i32, _iovs_len: i32, _offset: i64, _nwritten_ptr: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_pwrite", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, iovs_ptr: i32, iovs_len: i32, offset: i64, nwritten_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_pwrite(fd={}, iovs_ptr={}, iovs_len={}, offset={}, nwritten_ptr={})", fd, iovs_ptr, iovs_len, offset, nwritten_ptr);
+        }
         0 // SUCCESS
     })?;
 
     // fd_readdir: Read directory entries from a directory
     linker.func_wrap("wasi_snapshot_preview1", "fd_readdir", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, buf_ptr: i32, buf_len: i32, cookie: i64, bufused_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_readdir(fd={}, buf_ptr={}, buf_len={}, cookie={}, bufused_ptr={})", fd, buf_ptr, buf_len, cookie, bufused_ptr);
+        }
         let (entries, _dir_path) = (|| -> Result<(Vec<(String, u8)>, String)> {
             let wasi_fs = match caller.data().wasi_fs.as_ref() {
                 Some(fs) => fs.clone(),
@@ -614,17 +690,29 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
     })?;
 
     // fd_renumber: Atomically replace a file descriptor (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_renumber", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _to: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_renumber", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, to: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_renumber(fd={}, to={})", fd, to);
+        }
         0 // SUCCESS
     })?;
 
     // fd_sync: Synchronize the data and metadata of a file to disk (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "fd_sync", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "fd_sync", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_sync(fd={})", fd);
+        }
         0 // SUCCESS
     })?;
 
     // fd_tell: Return the current offset of a file descriptor
     linker.func_wrap("wasi_snapshot_preview1", "fd_tell", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, result_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] fd_tell(fd={}, result_ptr={})", fd, result_ptr);
+        }
         let wasi_fs = match caller.data().wasi_fs.as_ref() {
             Some(fs) => fs.clone(),
             None => return 8, // EBADF
@@ -643,12 +731,20 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
     })?;
 
     // path_create_directory: Create a directory (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "path_create_directory", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _path_ptr: i32, _path_len: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_create_directory", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, path_ptr: i32, path_len: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_create_directory(fd={}, path_ptr={}, path_len={})", fd, path_ptr, path_len);
+        }
         0 // SUCCESS
     })?;
 
     // path_filestat_get: Return the attributes of a file or directory
-    linker.func_wrap("wasi_snapshot_preview1", "path_filestat_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _flags: i32, path_ptr: i32, path_len: i32, result_ptr: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_filestat_get", |mut caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, flags: i32, path_ptr: i32, path_len: i32, result_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_filestat_get(fd={}, flags={}, path_ptr={}, path_len={}, result_ptr={})", fd, flags, path_ptr, path_len, result_ptr);
+        }
         let (filetype, size) = (|| -> Result<(u8, u64)> {
             let export = caller.get_export("memory").ok_or_else(|| anyhow!("memory export not found"))?;
             let mut path_bytes = vec![0u8; path_len as usize];
@@ -690,37 +786,65 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
     })?;
 
     // path_filestat_set_times: Adjust the times of a file or directory (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "path_filestat_set_times", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _flags: i32, _path_ptr: i32, _path_len: i32, _atim: i64, _mtim: i64, _fst_flags: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_filestat_set_times", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, flags: i32, path_ptr: i32, path_len: i32, atim: i64, mtim: i64, fst_flags: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_filestat_set_times(fd={}, flags={}, path_ptr={}, path_len={}, atim={}, mtim={}, fst_flags={})", fd, flags, path_ptr, path_len, atim, mtim, fst_flags);
+        }
         0 // SUCCESS
     })?;
 
     // path_link: Create a hard link (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "path_link", |_caller: wasmtime::Caller<'_, DeterministicThread>, _old_fd: i32, _old_flags: i32, _old_path_ptr: i32, _old_path_len: i32, _new_fd: i32, _new_path_ptr: i32, _new_path_len: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_link", |caller: wasmtime::Caller<'_, DeterministicThread>, old_fd: i32, old_flags: i32, old_path_ptr: i32, old_path_len: i32, new_fd: i32, new_path_ptr: i32, new_path_len: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_link(old_fd={}, old_flags={}, old_path_ptr={}, old_path_len={}, new_fd={}, new_path_ptr={}, new_path_len={})", old_fd, old_flags, old_path_ptr, old_path_len, new_fd, new_path_ptr, new_path_len);
+        }
         0 // SUCCESS
     })?;
 
     // path_readlink: Read the contents of a symbolic link (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "path_readlink", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _path_ptr: i32, _path_len: i32, _buf_ptr: i32, _buf_len: i32, _bufused_ptr: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_readlink", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, path_ptr: i32, path_len: i32, buf_ptr: i32, buf_len: i32, bufused_ptr: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_readlink(fd={}, path_ptr={}, path_len={}, buf_ptr={}, buf_len={}, bufused_ptr={})", fd, path_ptr, path_len, buf_ptr, buf_len, bufused_ptr);
+        }
         0 // SUCCESS
     })?;
 
     // path_remove_directory: Remove a directory (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "path_remove_directory", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _path_ptr: i32, _path_len: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_remove_directory", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, path_ptr: i32, path_len: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_remove_directory(fd={}, path_ptr={}, path_len={})", fd, path_ptr, path_len);
+        }
         0 // SUCCESS
     })?;
 
     // path_rename: Rename a file or directory (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "path_rename", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _old_path_ptr: i32, _old_path_len: i32, _new_fd: i32, _new_path_ptr: i32, _new_path_len: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_rename", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, old_path_ptr: i32, old_path_len: i32, new_fd: i32, new_path_ptr: i32, new_path_len: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_rename(fd={}, old_path_ptr={}, old_path_len={}, new_fd={}, new_path_ptr={}, new_path_len={})", fd, old_path_ptr, old_path_len, new_fd, new_path_ptr, new_path_len);
+        }
         0 // SUCCESS
     })?;
 
     // path_symlink: Create a symbolic link (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "path_symlink", |_caller: wasmtime::Caller<'_, DeterministicThread>, _old_path_ptr: i32, _old_path_len: i32, _fd: i32, _new_path_ptr: i32, _new_path_len: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_symlink", |caller: wasmtime::Caller<'_, DeterministicThread>, old_path_ptr: i32, old_path_len: i32, fd: i32, new_path_ptr: i32, new_path_len: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_symlink(old_path_ptr={}, old_path_len={}, fd={}, new_path_ptr={}, new_path_len={})", old_path_ptr, old_path_len, fd, new_path_ptr, new_path_len);
+        }
         0 // SUCCESS
     })?;
 
     // path_unlink_file: Unlink a file (stub)
-    linker.func_wrap("wasi_snapshot_preview1", "path_unlink_file", |_caller: wasmtime::Caller<'_, DeterministicThread>, _fd: i32, _path_ptr: i32, _path_len: i32| -> i32 {
+    linker.func_wrap("wasi_snapshot_preview1", "path_unlink_file", |caller: wasmtime::Caller<'_, DeterministicThread>, fd: i32, path_ptr: i32, path_len: i32| -> i32 {
+        if caller.data().trace_wasi {
+            let mut stdout = caller.data().stdout.lock().unwrap();
+            let _ = writeln!(stdout, "[WASI] path_unlink_file(fd={}, path_ptr={}, path_len={})", fd, path_ptr, path_len);
+        }
         0 // SUCCESS
     })?;
 

@@ -71,6 +71,7 @@ pub async fn run_wasm(
     vfs_host_path: Option<&Path>,
     trace: Option<ExecutionTrace>,
     new_traces: tokio::sync::mpsc::UnboundedSender<ExecutionTrace>,
+    trace_wasi: bool,
 ) -> Result<WasmTimings> {
     let mut timings = WasmTimings::default();
     let vfs = if let Some(host_path) = vfs_host_path {
@@ -119,6 +120,7 @@ pub async fn run_wasm(
         envs: envs.clone(),
         wasi_fs: Some(wasi_fs.clone()),
         trace_state: Some(trace_state.clone()),
+        trace_wasi,
     });
 
     for import in module.imports() {
@@ -143,6 +145,7 @@ pub async fn run_wasm(
         envs,
         wasi_fs: Some(wasi_fs),
         trace_state: Some(trace_state),
+        trace_wasi,
     });
 
     let execute_wall_start = std::time::Instant::now();

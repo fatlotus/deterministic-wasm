@@ -65,6 +65,13 @@ You can set environment variables for the WASM simulation using the `--env` flag
 cargo run -- --env KEY1=value1 --env KEY2=value2 src/wat/env_test.wat
 ```
 
+#### Tracing WASI Calls
+You can print every WASI system call as it happens using the `--trace-wasi` flag. This is useful for debugging guest applications.
+
+```bash
+cargo run -- --trace-wasi src/wat/hello_wasi.wat
+```
+
 ## Model Checker
 
 The deterministic sandbox includes a built-in model checker that can systematically explore different execution paths in multi-threaded programs. This is particularly useful for finding race conditions and other concurrency bugs.
