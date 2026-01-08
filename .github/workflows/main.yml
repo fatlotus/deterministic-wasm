@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Bazel
+      uses: bazel-contrib/setup-bazel@v3
+
+    - name: Install cargo-vet
+      run: cargo install cargo-vet
+
+    - name: Run bazel test
+      run: bazel test //...
+
+    - name: Run cargo vet
+      run: cargo vet
