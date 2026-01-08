@@ -289,26 +289,42 @@ pub fn register_wasi_fs_builtins(linker: &mut Linker<DeterministicThread>) -> Re
             let path = String::from_utf8(path_bytes)?;
 
             let wasi_fs = caller.data().wasi_fs.as_ref().ok_or_else(|| anyhow::anyhow!("WASI FS not initialized"))?.clone();
+
+            let dir_path = {
+                let open_files = wasi_fs.open_files.lock().unwrap();
+                match open_files.get(&(_dir_fd as u32)) {
+                    Some(open_file) => open_file.path.clone(),
+                    None => return Err(anyhow!("Bad dir_fd: {}", _dir_fd)),
+                }
+            };
             
-            let mut normalized_path = path.clone();
-            if normalized_path.starts_with("./") {
-                normalized_path = normalized_path[2..].to_string();
+            // Join dir_path and path
+            // Handle cases where dir_path is "." (root)
+            let mut resolved_path = if dir_path == "." {
+                path.clone()
+            } else {
+                // simple slash join
+                 format!("{}/{}", dir_path, path)
+            };
+
+            // Normalize: remove leading ./ or /
+            if resolved_path.starts_with("./") {
+                resolved_path = resolved_path[2..].to_string();
             }
-            if normalized_path.starts_with('/') {
-                normalized_path = normalized_path[1..].to_string();
+            if resolved_path.starts_with('/') {
+                resolved_path = resolved_path[1..].to_string();
             }
+            // Simple normalization to remove duplicate slashes if any
+            resolved_path = resolved_path.replace("//", "/");
+
 
             // Check if file exists in VFS
             let nodes = wasi_fs.vfs.nodes.lock().unwrap();
-            if !nodes.contains_key(&normalized_path) && !nodes.contains_key(&path) {
-                 return Err(anyhow!("File not found: {} (normalized: {})", path, normalized_path));
+            if !nodes.contains_key(&resolved_path) {
+                 return Err(anyhow!("File not found: {} (resolved: {})", path, resolved_path));
             }
             
-            let final_path = if nodes.contains_key(&normalized_path) {
-                normalized_path
-            } else {
-                path
-            };
+            let final_path = resolved_path;
             drop(nodes);
 
             let mut next_fd = wasi_fs.next_fd.lock().unwrap();
