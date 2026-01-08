@@ -8,6 +8,7 @@ WAT_TESTS = [
     "proc_exit_test",
     "proc_exit_threads_test",
     "argv0_test",
+    "readdir_test",
 ]
 
 [

@@ -7,6 +7,7 @@ exports_files([
     "random_test_go.stdout",
     "threads_test_go.stdout",
     "argv0_test_go.stdout",
+    "readdir_test_go.stdout",
 ])
 
 GO_TEST_FILES = [
@@ -16,6 +17,7 @@ GO_TEST_FILES = [
     "threads_test.go",
     "model_checker_main.go",
     "argv0_test.go",
+    "readdir_test.go",
 ]
 
 load("//:wasm_test.bzl", "wasm_test")
