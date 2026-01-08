@@ -57,11 +57,17 @@ pub fn register_wasi_builtins(linker: &mut Linker<DeterministicThread>) -> Resul
         let args = caller.data().args.clone();
         let export = caller.get_export("memory");
         if let Some(export) = export {
-            let count = args.len() as u32;
+            let count = std::cmp::max(1, args.len()) as u32;
             let mut buf_size = 0u32;
-            for arg in &args {
+            
+            // Handle argv[0]
+            buf_size += ("/main.wasm".len() + 1) as u32;
+
+            // Handle remaining args
+            for arg in args.iter().skip(1) {
                 buf_size += (arg.len() + 1) as u32; // +1 for null terminator
             }
+            
             if write_mem(&mut caller, &export, count_ptr as usize, &count.to_le_bytes()).is_ok() &&
                write_mem(&mut caller, &export, buf_size_ptr as usize, &buf_size.to_le_bytes()).is_ok() {
                 return 0; // SUCCESS
@@ -76,19 +82,32 @@ pub fn register_wasi_builtins(linker: &mut Linker<DeterministicThread>) -> Resul
         let export = caller.get_export("memory").ok_or_else(|| anyhow::anyhow!("memory export not found")).unwrap();
         
         let mut current_buf_offset = 0;
-        for (i, arg) in args.iter().enumerate() {
+        let mut arg_index = 0;
+
+        // Helper to write an argument
+        let mut write_arg = |arg_val: &str| {
             let arg_ptr = argv_buf_ptr + current_buf_offset as i32;
-            let arg_bytes = arg.as_bytes();
+            let arg_bytes = arg_val.as_bytes();
             
             // Write pointer to argv array
-            write_mem(&mut caller, &export, (argv_ptr + (i * 4) as i32) as usize, &arg_ptr.to_le_bytes()).unwrap();
+            write_mem(&mut caller, &export, (argv_ptr + (arg_index * 4) as i32) as usize, &arg_ptr.to_le_bytes()).unwrap();
             
             // Write string + null terminator to buffer
             write_mem(&mut caller, &export, (argv_buf_ptr + current_buf_offset as i32) as usize, arg_bytes).unwrap();
             write_mem(&mut caller, &export, (argv_buf_ptr + current_buf_offset as i32 + arg_bytes.len() as i32) as usize, &[0u8]).unwrap();
             
             current_buf_offset += arg_bytes.len() + 1;
+            arg_index += 1;
+        };
+
+        // Write argv[0]
+        write_arg("/main.wasm");
+
+        // Write remaining args
+        for arg in args.iter().skip(1) {
+            write_arg(arg.as_str());
         }
+
         0 // SUCCESS
     })?;
 
