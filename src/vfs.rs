@@ -37,10 +37,8 @@ impl VirtualFileSystem {
                 let entry = entry?;
                 let path = entry.path();
                 let name = entry.file_name().into_string().map_err(|_| anyhow!("Invalid filename"))?;
-                let vfs_path = if current_vfs_path == "/" {
+                let vfs_path = if current_vfs_path.is_empty() {
                     format!("/{}", name)
-                } else if current_vfs_path.is_empty() {
-                     name
                 } else {
                     format!("{}/{}", current_vfs_path, name)
                 };
@@ -51,7 +49,11 @@ impl VirtualFileSystem {
                 } else {
                     let mut content = Vec::new();
                     std::fs::File::open(&path)?.read_to_end(&mut content)?;
-                    vfs.nodes.lock().unwrap().insert(vfs_path, VfsNode::File(content));
+                    vfs.nodes.lock().unwrap().insert(vfs_path.clone(), VfsNode::File(content.clone()));
+                    if current_vfs_path.is_empty() {
+                        vfs.nodes.lock().unwrap().insert(name.clone(), VfsNode::File(content.clone()));
+                        vfs.nodes.lock().unwrap().insert(format!("./{}", name), VfsNode::File(content));
+                    }
                 }
             }
             Ok(())
