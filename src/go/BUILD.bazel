@@ -49,6 +49,7 @@ load("//:wasm_test.bzl", "wasm_test")
         name = (f[:-3] if f != "model_checker_main.go" else "model_checker") + "_go_test",
         stdout = (f[:-3] if f != "model_checker_main.go" else "model_checker") + "_go.stdout",
         wasm = ":" + (f[:-3] if f != "model_checker_main.go" else "model_checker") + "_go",
+        data = ["//:test_data"] if f in ["vfs_test.go", "readdir_test.go"] else [],
     )
     for f in GO_TEST_FILES
 ]
